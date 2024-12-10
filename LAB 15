@@ -1,0 +1,194 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_SUBDIRECTORIES 5
+#define MAX_FILES 5
+#define FILENAME_SIZE 100
+#define DIRECTORY_NAME_SIZE 100
+
+typedef struct {
+    char name[FILENAME_SIZE];
+} File;
+
+typedef struct {
+    char name[DIRECTORY_NAME_SIZE];
+    File files[MAX_FILES];
+    int file_count;
+} Subdirectory;
+
+typedef struct {
+    Subdirectory subdirectories[MAX_SUBDIRECTORIES];
+    int subdirectory_count;
+} Directory;
+
+Directory root_directory;
+
+void create_file() {
+    if (root_directory.subdirectory_count == 0) {
+        printf("No subdirectory exists. Create a subdirectory first.\n");
+        return;
+    }
+
+    char subdir_name[DIRECTORY_NAME_SIZE];
+    printf("Enter the subdirectory name to create a file: ");
+    scanf("%s", subdir_name);
+
+    int subdir_index = -1;
+    for (int i = 0; i < root_directory.subdirectory_count; i++) {
+        if (strcmp(root_directory.subdirectories[i].name, subdir_name) == 0) {
+            subdir_index = i;
+            break;
+        }
+    }
+
+    if (subdir_index == -1) {
+        printf("Subdirectory not found.\n");
+        return;
+    }
+
+    if (root_directory.subdirectories[subdir_index].file_count >= MAX_FILES) {
+        printf("Maximum file limit reached in the subdirectory.\n");
+        return;
+    }
+
+    char filename[FILENAME_SIZE];
+    printf("Enter the filename to create: ");
+    scanf("%s", filename);
+
+    strcpy(root_directory.subdirectories[subdir_index].files[root_directory.subdirectories[subdir_index].file_count].name, filename);
+    root_directory.subdirectories[subdir_index].file_count++;
+    printf("File '%s' created in subdirectory '%s'.\n", filename, subdir_name);
+}
+
+void create_subdirectory() {
+    if (root_directory.subdirectory_count >= MAX_SUBDIRECTORIES) {
+        printf("Maximum subdirectory limit reached.\n");
+        return;
+    }
+
+    char subdir_name[DIRECTORY_NAME_SIZE];
+    printf("Enter the subdirectory name: ");
+    scanf("%s", subdir_name);
+
+    for (int i = 0; i < root_directory.subdirectory_count; i++) {
+        if (strcmp(root_directory.subdirectories[i].name, subdir_name) == 0) {
+            printf("Subdirectory already exists.\n");
+            return;
+        }
+    }
+
+    strcpy(root_directory.subdirectories[root_directory.subdirectory_count].name, subdir_name);
+    root_directory.subdirectories[root_directory.subdirectory_count].file_count = 0;
+    root_directory.subdirectory_count++;
+    printf("Subdirectory '%s' created.\n", subdir_name);
+}
+
+void delete_file() {
+    if (root_directory.subdirectory_count == 0) {
+        printf("No subdirectory exists.\n");
+        return;
+    }
+
+    char subdir_name[DIRECTORY_NAME_SIZE];
+    printf("Enter the subdirectory name to delete a file from: ");
+    scanf("%s", subdir_name);
+
+    int subdir_index = -1;
+    for (int i = 0; i < root_directory.subdirectory_count; i++) {
+        if (strcmp(root_directory.subdirectories[i].name, subdir_name) == 0) {
+            subdir_index = i;
+            break;
+        }
+    }
+
+    if (subdir_index == -1) {
+        printf("Subdirectory not found.\n");
+        return;
+    }
+
+    if (root_directory.subdirectories[subdir_index].file_count == 0) {
+        printf("No files in the subdirectory to delete.\n");
+        return;
+    }
+
+    char filename[FILENAME_SIZE];
+    printf("Enter the filename to delete: ");
+    scanf("%s", filename);
+
+    int file_index = -1;
+    for (int i = 0; i < root_directory.subdirectories[subdir_index].file_count; i++) {
+        if (strcmp(root_directory.subdirectories[subdir_index].files[i].name, filename) == 0) {
+            file_index = i;
+            break;
+        }
+    }
+
+    if (file_index == -1) {
+        printf("File not found.\n");
+        return;
+    }
+
+    for (int i = file_index; i < root_directory.subdirectories[subdir_index].file_count - 1; i++) {
+        strcpy(root_directory.subdirectories[subdir_index].files[i].name, root_directory.subdirectories[subdir_index].files[i + 1].name);
+    }
+
+    root_directory.subdirectories[subdir_index].file_count--;
+    printf("File '%s' deleted from subdirectory '%s'.\n", filename, subdir_name);
+}
+
+void display_files() {
+    if (root_directory.subdirectory_count == 0) {
+        printf("No subdirectories exist.\n");
+        return;
+    }
+
+    for (int i = 0; i < root_directory.subdirectory_count; i++) {
+        printf("\nSubdirectory: %s\n", root_directory.subdirectories[i].name);
+        if (root_directory.subdirectories[i].file_count == 0) {
+            printf("No files in this subdirectory.\n");
+        } else {
+            for (int j = 0; j < root_directory.subdirectories[i].file_count; j++) {
+                printf("  File: %s\n", root_directory.subdirectories[i].files[j].name);
+            }
+        }
+    }
+}
+
+int main() {
+    root_directory.subdirectory_count = 0;
+    int choice;
+
+    while (1) {
+        printf("\nTwo-Level Directory Management\n");
+        printf("1. Create Subdirectory\n");
+        printf("2. Create File\n");
+        printf("3. Delete File\n");
+        printf("4. Display Files\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                create_subdirectory();
+                break;
+            case 2:
+                create_file();
+                break;
+            case 3:
+                delete_file();
+                break;
+            case 4:
+                display_files();
+                break;
+            case 5:
+                printf("Exiting...\n");
+                exit(0);
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    }
+
+    return 0;
+}
