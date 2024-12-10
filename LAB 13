@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MEMORY_SIZE 1024
+#define NUM_BLOCKS 5
+
+typedef struct {
+    int size;
+    int is_allocated;
+} Block;
+
+Block memory[MEMORY_SIZE];
+int allocation[NUM_BLOCKS];
+
+void first_fit(int block_size) {
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        if (memory[i].is_allocated == 0 && memory[i].size >= block_size) {
+            memory[i].is_allocated = 1;
+            printf("First Fit: Allocated block of size %d at position %d\n", block_size, i);
+            return;
+        }
+    }
+    printf("First Fit: No suitable block found\n");
+}
+
+void best_fit(int block_size) {
+    int best_idx = -1, best_size = MEMORY_SIZE + 1;
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        if (memory[i].is_allocated == 0 && memory[i].size >= block_size && memory[i].size < best_size) {
+            best_size = memory[i].size;
+            best_idx = i;
+        }
+    }
+    if (best_idx != -1) {
+        memory[best_idx].is_allocated = 1;
+        printf("Best Fit: Allocated block of size %d at position %d\n", block_size, best_idx);
+    } else {
+        printf("Best Fit: No suitable block found\n");
+    }
+}
+
+void worst_fit(int block_size) {
+    int worst_idx = -1, worst_size = -1;
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        if (memory[i].is_allocated == 0 && memory[i].size >= block_size && memory[i].size > worst_size) {
+            worst_size = memory[i].size;
+            worst_idx = i;
+        }
+    }
+    if (worst_idx != -1) {
+        memory[worst_idx].is_allocated = 1;
+        printf("Worst Fit: Allocated block of size %d at position %d\n", block_size, worst_idx);
+    } else {
+        printf("Worst Fit: No suitable block found\n");
+    }
+}
+
+int main() {
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        memory[i].size = rand() % 50 + 50;
+        memory[i].is_allocated = 0;
+    }
+
+    int block_sizes[NUM_BLOCKS] = {100, 200, 300, 400, 500};
+
+    for (int i = 0; i < NUM_BLOCKS; i++) {
+        first_fit(block_sizes[i]);
+        best_fit(block_sizes[i]);
+        worst_fit(block_sizes[i]);
+    }
+
+    return 0;
+}
