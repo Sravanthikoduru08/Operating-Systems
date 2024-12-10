@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define P 5
+#define R 3
+
+int alloc[P][R], max[P][R], need[P][R], available[R];
+
+bool is_safe() {
+    int work[R], finish[P] = {0};
+    for (int i = 0; i < R; i++) work[i] = available[i];
+    while (1) {
+        int found = 0;
+        for (int i = 0; i < P; i++) {
+            if (!finish[i]) {
+                int j;
+                for (j = 0; j < R; j++) {
+                    if (need[i][j] > work[j]) break;
+                }
+                if (j == R) {
+                    for (int k = 0; k < R; k++) work[k] += alloc[i][k];
+                    finish[i] = 1;
+                    found = 1;
+                }
+            }
+        }
+        if (!found) break;
+    }
+    for (int i = 0; i < P; i++) if (!finish[i]) return false;
+    return true;
+}
+
+void request_resources(int process) {
+    int request[R];
+    printf("Enter request for process %d: ", process);
+    for (int i = 0; i < R; i++) scanf("%d", &request[i]);
+
+    for (int i = 0; i < R; i++) {
+        if (request[i] > need[process][i] || request[i] > available[i]) {
+            printf("Request exceeds need or availability.\n");
+            return;
+        }
+    }
+
+    for (int i = 0; i < R; i++) {
+        available[i] -= request[i];
+        alloc[process][i] += request[i];
+        need[process][i] -= request[i];
+    }
+
+    if (is_safe()) {
+        printf("Request granted.\n");
+    } else {
+        for (int i = 0; i < R; i++) {
+            available[i] += request[i];
+            alloc[process][i] -= request[i];
+            need[process][i] += request[i];
+        }
+        printf("Request denied, system not in a safe state.\n");
+    }
+}
+
+int main() {
+    printf("Enter available resources: ");
+    for (int i = 0; i < R; i++) scanf("%d", &available[i]);
+
+    printf("Enter allocation matrix:\n");
+    for (int i = 0; i < P; i++)
+        for (int j = 0; j < R; j++) scanf("%d", &alloc[i][j]);
+
+    printf("Enter max matrix:\n");
+    for (int i = 0; i < P; i++)
+        for (int j = 0; j < R; j++) scanf("%d", &max[i][j]);
+
+    for (int i = 0; i < P; i++)
+        for (int j = 0; j < R; j++) need[i][j] = max[i][j] - alloc[i][j];
+
+    int process, choice;
+    while (1) {
+        printf("\n1. Request resources\n2. Exit\nEnter choice: ");
+        scanf("%d", &choice);
+        if (choice == 1) {
+            printf("Enter process number (0-4): ");
+            scanf("%d", &process);
+            request_resources(process);
+        } else {
+            break;
+        }
+    }
+    return 0;
+}
