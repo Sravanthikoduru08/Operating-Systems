@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/shm.h>  
+#include <sys/types.h>
+#include <unistd.h>
+
+#define SHM_SIZE 1024  
+
+
+struct shared_data {
+    int written_by_producer;
+    char message[256];
+};
+
+int main() {
+    key_t key = ftok("shared_memory.c", 65); // Create a unique key for shared memory
+    int shmid = shmget(key, SHM_SIZE, 0666 | IPC_CREAT); // Allocate shared memory
+
+    if (shmid == -1) {
+        perror("shmget failed");
+        exit(1);
+    }
+
+    struct shared_data* data = (struct shared_data*)shmat(shmid, NULL, 0); 
+
+    if (data == (void*)-1) {
+        perror("shmat failed");
+        exit(1);
+    }
+
+    
+    if (fork() == 0) {  // Child process (Producer)
+        printf("Producer: Writing to shared memory...\n");
+        
+       
+        data->written_by_producer = 1;  // Indicating data is written
+        snprintf(data->message, sizeof(data->message), "Hello from producer!");
+
+        printf("Producer: Data written: %s\n", data->message);
+        
+        
+        if (shmdt(data) == -1) {
+            perror("shmdt failed");
+            exit(1);
+        }
+        exit(0);  
+    }
+
+    
+    else {  // Parent process (Consumer)
+        
+        while (data->written_by_producer == 0) {
+            printf("Consumer: Waiting for producer to write...\n");
+            sleep(1);
+        }
+
+        printf("Consumer: Data received: %s\n", data->message);
+
+        
+        if (shmdt(data) == -1) {
+            perror("shmdt failed");
+            exit(1);
+        }
+
+        
+        if (shmctl(shmid, IPC_RMID, NULL) == -1) {
+            perror("shmctl failed");
+            exit(1);
+        }
+    }
+
+    return 0;
+}
